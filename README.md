@@ -12,6 +12,12 @@ python -m http.server 8000 --directory dist
 
 Then open http://localhost:8000. For hosting, publish the contents of `dist/` as the static site root. Navigation uses hash routes, so no server-side route rewrites are needed.
 
+## Deploy to Vercel
+
+Import this repository with production branch `main` and leave **Root Directory** at the repository root (`.`). The included `vercel.json` selects the **Other** framework preset, skips installation and building, and serves `dist/`.
+
+If the project already exists, check that Root Directory is still the repository root, then deploy the latest commit. First verify that the generated `.vercel.app` URL opens correctly. After that, add your custom domain under the project's Domains settings and apply the exact DNS records Vercel supplies.
+
 ## Website features
 
 - Nine views: home, corporate wellness, magazine, The VA(u)LT, BLOOM, our story, Wellness in the City, MyCourses and contact.
