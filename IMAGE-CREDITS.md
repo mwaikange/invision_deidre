@@ -2,7 +2,13 @@
 
 Created with the built-in image generation tool. Project assets: dist/assets/movement.png, workplace.png, bloom.png and nourish.png. These are illustrative lifestyle images, not photographs of InVision staff, clients or actual events.
 
-The supplied eye JPEG is copied byte-for-byte to dist/assets/eye-original.jpeg. logo-photo.svg embeds those exact bytes alongside the wordmark. Its black background is retained. The original vector logo remains unused.
+The active header and footer use `dist/assets/invision-logo.jpeg`, extracted unchanged from the supplied first-round Word document. It includes the photographic eye within the InVision wordmark. The earlier supplied eye photograph remains in `dist/assets/eye-original.jpeg` and is used as the favicon.
+
+The founders’ portraits were supplied for this website: Hileni Phillips (`hileni-phillips.jpg`) came from the separately attached photograph; Dr Deidre Kwenani (`deidre-kwenani.jpeg`) came from the Word document. Both files retain the original image bytes.
+
+The original VA(u)LT artwork is preserved in `vault-original.jpeg`. `vault-phone.svg` embeds that artwork with a phone detail added inside the U, as requested. `wellness-dimensions.svg` is an original diagram of the eight dimensions of wellness.
+
+The five magazine covers and selected article pages in `dist/assets/articles/` are original supplied InVision Wellness Magazine material, presented as a historical archive. The June 2017 first issue and February–April 2019 eighth issue were extracted from the first-round Word document, along with all article-page previews. Original printed content has not been rewritten.
 
 ## Final prompt set
 
