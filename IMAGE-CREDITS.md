@@ -12,6 +12,8 @@ The five magazine covers and selected article pages in `dist/assets/articles/` a
 
 ## Final prompt set
 
+The optional breathing-break music (`dist/assets/gentle-music.wav`) is an original 64-second instrumental created for this website with soft synthesized keys and ambient chords. It plays only after a visitor presses Play gentle music.
+
 ### movement
 
 Use case: photorealistic-natural. Asset type: premium wellness website hero photograph, landscape 3:2. Three Black southern African women, ages 25 to 45, naturally varied body types, joyfully walking together after a gentle outdoor workout in warm southern African sunshine. Candid genuine laughter, one looks at a friend, not camera. Stylish activewear in lavender, coral and soft lime, natural hair textures. Dry golden grass, a few acacia trees and distant rocky hills, contemporary Namibia-inspired setting without landmarks. Fashion editorial meets candid documentary, warm light, rich natural skin texture, subtle film grain, energetic close-medium composition showing people from upper thighs upward, subjects fill frame. Beautiful photography, real human connection, not a posed corporate stock photo. No text, no logos, no borders.

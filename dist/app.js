@@ -31,7 +31,7 @@ function testimonialTicker() {
   return `<section class="testimonial-ticker" aria-label="Words from our community"><div class="testimonial-marquee"><div class="testimonial-group">${quotes}</div><div class="testimonial-group" aria-hidden="true">${quotes}</div></div><button class="ticker-toggle" data-action="ticker" aria-pressed="false">Pause testimonials <span aria-hidden="true">Ⅱ</span></button></section>`;
 }
 function breath() {
-  return `<section class="pause-section section wrap"><div><span class="eyebrow">A LITTLE SPACE FOR YOU</span><h2>Your next step?<br>Take a <em>breath.</em></h2><p>Before the next meeting. Before the next thing. Give yourself one quiet minute, right here.</p><p class="breath-note">Follow a gentle, comfortable rhythm. Breathe naturally whenever you prefer.</p></div><div class="breath-box"><div class="breath-orbit"><div class="breath-circle" id="breath-circle"><strong id="breath-label">Just be.</strong><span id="breath-count">YOUR ONE-MINUTE RESET</span></div></div><div class="breath-actions"><button class="button light" data-action="breathe" id="breath-button">Start my minute <span aria-hidden="true">↗</span></button><button class="music-toggle" data-action="music" aria-pressed="${musicEnabled}"><span aria-hidden="true">♫</span> Gentle music: ${musicEnabled ? 'on' : 'off'}</button></div><div class="breath-status" id="breath-status" role="status">A little pause can be a lovely place to start.</div></div></section>`;
+  return `<section class="pause-section section wrap"><div><span class="eyebrow">A LITTLE SPACE FOR YOU</span><h2>Your next step?<br>Take a <em>breath.</em></h2><p>Before the next meeting. Before the next thing. Give yourself one quiet minute, right here.</p><p class="breath-note">Follow a gentle, comfortable rhythm. Breathe naturally whenever you prefer.</p></div><div class="breath-box"><div class="breath-orbit"><div class="breath-circle" id="breath-circle"><strong id="breath-label">Just be.</strong><span id="breath-count">YOUR ONE-MINUTE RESET</span></div></div><audio id="gentle-audio" src="assets/gentle-music.wav" preload="none" loop hidden></audio><div class="breath-actions"><button class="button light" data-action="breathe" id="breath-button">Start my minute <span aria-hidden="true">↗</span></button><button class="music-toggle" data-action="music" aria-pressed="${musicEnabled}"><span aria-hidden="true">♫</span> ${musicEnabled ? 'Pause gentle music' : 'Play gentle music'}</button></div><div class="breath-status" id="breath-status" role="status">A little pause can be a lovely place to start.</div></div></section>`;
 }
 const dimensions = [
   ['Emotional','Making space to recognise feelings and seek support.'], ['Spiritual','Connecting with purpose, values and what gives life meaning.'],
@@ -94,7 +94,7 @@ function enhancePhotography(route) {
   const art = {'/corporate':['workplace','WELLNESS THAT WORKS FOR YOUR PEOPLE.'],'/about':['movement','A WHOLE LIFE. A FRESH PERSPECTIVE.'],'/contact':['nourish','LET’S PUT SOMETHING GOOD INTO MOTION.']};
   if (!art[route]) return;
   const [src,caption] = art[route];
-  const figure = document.createElement('figure'); figure.className = 'page-photo-band wrap';
+  const figure = document.createElement('figure'); figure.className = `page-photo-band wrap${['/about','/corporate'].includes(route) ? ' full-photo' : ''}`;
   figure.innerHTML = `<div><img src="assets/${src}.png" alt="Illustrative wellness lifestyle image" loading="lazy"><figcaption>${caption}</figcaption></div>`;
   $('.page-title').after(figure);
 }
@@ -115,25 +115,23 @@ function openIssue(id) {
   const m = magazines.find(x => x.id === id); if (!m) return;
   showModal(`<span class="eyebrow">ARCHIVE · ISSUE ${m.id} · ${m.date}</span><div class="issue-reader"><aside class="issue-cover"><img src="${m.cover}" alt="${m.alt}"><div class="modal-tags">${m.tags.map(x => `<span class="pill">${x}</span>`).join('')}</div>${inquiry('Magazine — distribution','Ask about this issue')}</aside><div class="issue-article"><h2>${m.articleTitle}</h2><p class="archive-context">Original article pages from the ${m.date} issue. Cover and article previews only.</p><div class="reader-toolbar"><label for="article-zoom">Article zoom</label><select id="article-zoom"><option value="100">100%</option><option value="150">150%</option><option value="200">200%</option><option value="300">300%</option></select><span>Scroll to read each page.</span></div><div class="article-scroll" tabindex="0" aria-label="Original magazine article pages"><div class="article-sheets" id="article-sheets">${m.pages.map((p,i) => `<figure><img src="assets/articles/${p}" alt="${m.pageTitles[i]}, original magazine page" loading="eager"><figcaption>${m.pageTitles[i]} · <a href="assets/articles/${p}" target="_blank" rel="noopener">Open original page ↗</a></figcaption></figure>`).join('')}</div></div></div></div>`,true);
 }
+function updateMusicControl() { const control = $('.music-toggle'); if (!control) return; control.setAttribute('aria-pressed',String(musicEnabled && !musicStarting)); control.innerHTML = `<span aria-hidden="true">♫</span> ${musicStarting ? 'Starting music…' : musicEnabled ? 'Pause gentle music' : 'Play gentle music'}`; }
 async function startMusic() {
   if (!musicEnabled || sound || musicStarting) return;
-  musicStarting = true;
-  let context;
+  const audio = $('#gentle-audio'); if (!audio) { musicEnabled = false; return; }
+  sound = audio; musicStarting = true; audio.volume = .65; updateMusicControl();
   try {
-    const Audio = window.AudioContext || window.webkitAudioContext;
-    if (!Audio) return;
-    context = new Audio(); await context.resume();
-    if (!musicEnabled || !breathTimer) { await context.close(); return; }
-    const master = context.createGain(); master.gain.setValueAtTime(0,context.currentTime); master.gain.linearRampToValueAtTime(.045,context.currentTime + 2); master.connect(context.destination);
-    const tones = [];
-    [130.8128,164.8138,195.9977,261.6256].forEach((frequency,i) => { const tone = context.createOscillator(); const gain = context.createGain(); tone.type = 'sine'; tone.frequency.value = frequency; tone.detune.value = i % 2 ? 3 : -3; gain.gain.value = .16; tone.connect(gain); gain.connect(master); tone.start(); tones.push(tone); });
-    const lfo = context.createOscillator(), depth = context.createGain(); lfo.frequency.value = .09; depth.gain.value = .012; lfo.connect(depth); depth.connect(master.gain); lfo.start(); tones.push(lfo);
-    sound = {context,master,tones};
-    if (!musicEnabled || !breathTimer) stopMusic();
-  } catch { if (context && !sound) context.close().catch(() => {}); if ($('#breath-status')) $('#breath-status').textContent = 'Your breathing break is ready. Music is unavailable in this browser.'; }
-  finally { musicStarting = false; }
+    await audio.play();
+    if (sound !== audio || !musicEnabled || !audio.isConnected) { audio.pause(); return; }
+    musicStarting = false; updateMusicControl();
+    $('#breath-status').textContent = breathTimer ? 'Gentle music is playing with your breathing break.' : 'Gentle music is playing. Start your minute whenever you’re ready.';
+  } catch {
+    if (sound !== audio) return;
+    sound = null; musicEnabled = false; musicStarting = false; updateMusicControl();
+    if ($('#breath-status')) $('#breath-status').textContent = 'Music could not start. Please try Play gentle music again.';
+  }
 }
-function stopMusic() { if (!sound) return; const previous = sound; sound = null; try { const now = previous.context.currentTime; previous.master.gain.cancelScheduledValues(now); previous.master.gain.setTargetAtTime(0,now,.18); setTimeout(() => previous.context.close().catch(() => {}),700); } catch { previous.context.close().catch(() => {}); } }
+function stopMusic() { const previous = sound; sound = null; musicEnabled = false; musicStarting = false; if (previous) { previous.pause(); previous.currentTime = 0; } updateMusicControl(); }
 function startBreath() {
   if (breathTimer) { stopBreath(); return; }
   breathStart = Date.now(); $('#breath-button').innerHTML = 'Finish my pause <span aria-hidden="true">×</span>'; $('#breath-status').textContent = 'Follow along, or choose your own comfortable rhythm.';
@@ -154,7 +152,7 @@ document.addEventListener('click',e => {
   if (target?.dataset.dimension !== undefined) { const index = Number(target.dataset.dimension); document.querySelectorAll('[data-dimension]').forEach(b => { b.classList.toggle('active',b === target); b.setAttribute('aria-pressed',String(b === target)); }); $('#dimension-detail').innerHTML = `<strong>${dimensions[index][0]} wellness.</strong> ${dimensions[index][1]}`; }
   if (target?.dataset.action === 'pause') { $('.pause-section').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'center'}); $('#breath-button').focus({preventScroll:true}); }
   if (target?.dataset.action === 'breathe') startBreath();
-  if (target?.dataset.action === 'music') { musicEnabled = !musicEnabled; target.setAttribute('aria-pressed',String(musicEnabled)); target.innerHTML = `<span aria-hidden="true">♫</span> Gentle music: ${musicEnabled ? 'on' : 'off'}`; if (musicEnabled && breathTimer) startMusic(); else stopMusic(); }
+  if (target?.dataset.action === 'music') { if (musicEnabled || musicStarting) { stopMusic(); $('#breath-status').textContent = breathTimer ? 'Your breathing break continues without music.' : 'Music paused. Start again whenever you’re ready.'; } else { musicEnabled = true; startMusic(); } }
   if (target?.dataset.action === 'ticker') { const paused = $('.testimonial-ticker').classList.toggle('paused'); target.setAttribute('aria-pressed',String(paused)); target.innerHTML = paused ? 'Play testimonials <span aria-hidden="true">▶</span>' : 'Pause testimonials <span aria-hidden="true">Ⅱ</span>'; }
   if (target?.dataset.action === 'portal') showModal(`<span class="eyebrow">QUICK CARE CLINIC</span><h2>Patient portal<br>is being prepared.</h2><p>Secure sign-in, intake forms and test-result access are not active yet.</p><p>Please do not send test results or medical records through the website’s general enquiry form.</p>${button('Contact the team','#/contact')}`);
   if (target?.dataset.action === 'privacy') showModal('<span class="eyebrow">YOUR DETAILS, WITH CARE</span><h2>Privacy & enquiries.</h2><p>The enquiry form prepares an email on your device. Nothing is sent until you review and send it through your email app. This site does not store enquiry form responses.</p><p>Saved magazine issues are stored only in this browser. Use the heart buttons to remove them, or clear your browser’s site data.</p><p>We do not collect patient information or display medical records on this website. For questions about your details, contact wellnessinvision@gmail.com.</p><p>Typography may be loaded from Google Fonts. If it is unavailable, your device’s fonts are used.</p>');
@@ -172,6 +170,6 @@ document.addEventListener('submit',e => {
   const link = document.createElement('a'); link.className = 'button purple'; link.href = url; link.textContent = 'Open my email draft ↗'; status.appendChild(link);
   const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'text-link copy-enquiry'; copy.textContent = 'Copy enquiry'; copy.onclick = async () => { const text = `To: wellnessinvision@gmail.com\nSubject: ${subject}\n\n${body}`; try { await navigator.clipboard.writeText(text); toast('Enquiry copied. Paste it into your email app.'); } catch { const fallback = document.createElement('textarea'); fallback.value = text; fallback.readOnly = true; fallback.setAttribute('aria-label','Prepared enquiry text'); status.appendChild(fallback); fallback.select(); toast('Select and copy your enquiry below.'); } }; status.appendChild(copy); link.focus();
 });
-document.addEventListener('visibilitychange',() => { if (document.hidden && breathTimer) stopBreath(); });
+document.addEventListener('visibilitychange',() => { if (document.hidden) { if (breathTimer) stopBreath(); else stopMusic(); } });
 $('.skip').addEventListener('click',e => { e.preventDefault(); $('#main').focus(); $('#main').scrollIntoView(); });
 window.addEventListener('hashchange',render); $('#year').textContent = new Date().getFullYear(); render();
