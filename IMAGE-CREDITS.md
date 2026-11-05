@@ -12,6 +12,8 @@ The five magazine covers and selected article pages in `dist/assets/articles/` a
 
 ## Final prompt set
 
+The Home/Our story living-photo scene and Corporate stretching scene were animated from `movement.png` and `workplace.png` with HeyGen Video 1. Playback streams remain hosted by HeyGen; the website loops their first five seconds silently and retains the source images as fallbacks. Generation IDs: `242135be10f94c9e83a6e44405b82ec1` and `406b2979efc94049929d0224123db9a4`.
+
 The optional breathing-break music (`dist/assets/gentle-music.wav`) is an original 64-second instrumental created for this website with soft synthesized keys and ambient chords. It plays only after a visitor presses Play gentle music.
 
 ### movement

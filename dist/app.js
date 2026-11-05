@@ -98,11 +98,39 @@ function enhancePhotography(route) {
   figure.innerHTML = `<div><img src="assets/${src}.png" alt="Illustrative wellness lifestyle image" loading="lazy"><figcaption>${caption}</figcaption></div>`;
   $('.page-title').after(figure);
 }
+const sceneClips = {
+  movement:'https://resource2.heygen.ai/videos/b64517ee75f040ee96156c38af57d404/b64517ee75f040ee96156c38af57d404/01a1a962-52fc-78b9-9c59-ade6dded10fc.mp4',
+  workplace:'https://resource2.heygen.ai/videos/b64517ee75f040ee96156c38af57d404/b64517ee75f040ee96156c38af57d404/01a1a962-8551-7ab2-83e3-0530ba593a68.mp4'
+};
+let activeScene = null;
+function stopScene() { if (!activeScene) return; const scene = activeScene; activeScene = null; scene.observer?.disconnect(); cancelAnimationFrame(scene.frame); scene.video.pause(); scene.video.removeAttribute('src'); scene.video.load(); }
+function updateScenePlayback() { if (!activeScene) return; const scene = activeScene; if (document.hidden || !scene.visible || scene.userPaused) { scene.video.pause(); return; } scene.play(); }
+function enhanceMotion(route) {
+  const image = route === '/' ? $('#hero-scene') : ['/about','/corporate'].includes(route) ? $('.page-photo-band img') : null;
+  if (!image) return;
+  const source = sceneClips[route === '/corporate' ? 'workplace' : 'movement'];
+  const host = image.parentElement, video = document.createElement('video'), control = document.createElement('button');
+  video.className = 'scene-motion'; video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.preload = 'metadata'; video.poster = image.src; video.setAttribute('muted',''); video.setAttribute('playsinline',''); video.setAttribute('aria-hidden','true'); video.setAttribute('disablepictureinpicture','');
+  control.type = 'button'; control.className = 'scene-toggle'; control.textContent = 'Play animation';
+  image.after(video); host.appendChild(control); host.classList.add('motion-scene');
+  const scene = {video,control,host,visible:false,userPaused:matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData === true,frame:0,observer:null,play:null};
+  activeScene = scene;
+  const updateControl = () => { control.textContent = video.paused ? 'Play animation' : 'Pause animation'; control.setAttribute('aria-label',control.textContent); };
+  scene.play = async () => { if (activeScene !== scene) return; if (!video.getAttribute('src')) video.src = source; try { await video.play(); if (activeScene !== scene || document.hidden || !scene.visible || scene.userPaused) video.pause(); } catch { updateControl(); } };
+  const keepFiveSecondLoop = () => { if (activeScene !== scene || video.paused) return; if (video.currentTime >= 5) video.currentTime = 0; scene.frame = requestAnimationFrame(keepFiveSecondLoop); };
+  video.addEventListener('playing',() => { host.classList.add('scene-loaded'); updateControl(); cancelAnimationFrame(scene.frame); scene.frame = requestAnimationFrame(keepFiveSecondLoop); });
+  video.addEventListener('pause',() => { cancelAnimationFrame(scene.frame); updateControl(); });
+  video.addEventListener('error',() => { host.classList.remove('scene-loaded'); cancelAnimationFrame(scene.frame); control.textContent = 'Retry animation'; control.setAttribute('aria-label','Retry animation'); });
+  control.addEventListener('click',() => { if (video.paused) { scene.userPaused = false; scene.visible = true; if (video.error) { video.removeAttribute('src'); video.load(); } scene.play(); } else { scene.userPaused = true; video.pause(); } });
+  if ('IntersectionObserver' in window) { scene.observer = new IntersectionObserver(entries => { if (activeScene !== scene) return; scene.visible = entries[0].isIntersecting; updateScenePlayback(); },{threshold:.1}); scene.observer.observe(host); }
+  else { scene.visible = true; updateScenePlayback(); }
+}
 function render() {
+  stopScene();
   stopBreath(false);
   const route = location.hash.replace(/^#/,'') || '/';
   $('#main').innerHTML = pages[route] ? pages[route]() : heading('Page not found','Let’s find your way <em>back.</em>') + `<section class="wrap content-section">${button('Back to our world','#/')}</section>`;
-  enhancePhotography(route); document.title = `${titles[route] || 'Page not found'} | InVision Wellness`;
+  enhancePhotography(route); enhanceMotion(route); document.title = `${titles[route] || 'Page not found'} | InVision Wellness`;
   document.querySelectorAll('nav a').forEach(a => a.getAttribute('href') === '#' + route ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
   $('nav').classList.remove('open'); $('.menu-toggle').setAttribute('aria-expanded','false'); $('.menu-toggle').setAttribute('aria-label','Open menu'); $('.nav-drop').open = false;
   if ($('#modal').open) $('#modal').close(); $('#modal').classList.remove('issue-dialog');
@@ -170,6 +198,6 @@ document.addEventListener('submit',e => {
   const link = document.createElement('a'); link.className = 'button purple'; link.href = url; link.textContent = 'Open my email draft ↗'; status.appendChild(link);
   const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'text-link copy-enquiry'; copy.textContent = 'Copy enquiry'; copy.onclick = async () => { const text = `To: wellnessinvision@gmail.com\nSubject: ${subject}\n\n${body}`; try { await navigator.clipboard.writeText(text); toast('Enquiry copied. Paste it into your email app.'); } catch { const fallback = document.createElement('textarea'); fallback.value = text; fallback.readOnly = true; fallback.setAttribute('aria-label','Prepared enquiry text'); status.appendChild(fallback); fallback.select(); toast('Select and copy your enquiry below.'); } }; status.appendChild(copy); link.focus();
 });
-document.addEventListener('visibilitychange',() => { if (document.hidden) { if (breathTimer) stopBreath(); else stopMusic(); } });
+document.addEventListener('visibilitychange',() => { if (document.hidden) { if (breathTimer) stopBreath(); else stopMusic(); } updateScenePlayback(); });
 $('.skip').addEventListener('click',e => { e.preventDefault(); $('#main').focus(); $('#main').scrollIntoView(); });
 window.addEventListener('hashchange',render); $('#year').textContent = new Date().getFullYear(); render();

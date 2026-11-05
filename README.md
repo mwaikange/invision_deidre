@@ -22,6 +22,7 @@ If the project already exists, check that Root Directory is still the repository
 
 - Ten views: home, corporate wellness, magazine, The VA(u)LT, courses, BLOOM, our story, Wellness in the City, MyCourses and contact.
 - Responsive desktop and mobile navigation.
+- Five-second living-photo loops on Home, Our story and Corporate wellness, with pause/play controls and still-image fallbacks. Reduced-motion and data-saving preferences start with the still image.
 - Four service shortcuts and an interactive eight-dimensions wellness guide.
 - Five historical magazine issues, article-page previews with zoom, search, year filters and locally saved favourites.
 - One-minute guided breathing exercise with optional original ambient audio.
@@ -48,3 +49,5 @@ Online payments, purchased course access, patient sign-in, intake forms and test
 The InVision wordmark and founder portraits are reproduced from the supplied files. The VA(u)LT artwork retains its original lettering with a phone detail inside the U. Four AI-created lifestyle pictures illustrate movement, workplace wellbeing, pregnancy preparation and nourishment; they are not photographs of InVision staff, clients or events. The site includes an image-credit explanation.
 
 Google Fonts is optional, with local font fallbacks. Reduced-motion preferences are respected. No analytics or tracking scripts are included.
+
+The two animated scenes use the generated HeyGen playback streams. Original photographs remain available if an external stream cannot load. The scenes pause while offscreen or the browser tab is hidden.
