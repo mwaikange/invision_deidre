@@ -17,7 +17,7 @@ const testimonials = [
   { quote:'Their work has been a major factor in the improvement of our staff Wellness programme.', credit:'Vilyo', context:'Staff wellness programme' },
   { quote:'Within 2 weeks of placing the advert in InVision Wellness Magazine, a major pharmaceutical sales company listed my product and bought all of my stock.', credit:'Pink Cup Sales Associate', context:'InVision Wellness Magazine advertiser' }
 ];
-let magFilter = 'All', magSearch = '', breathTimer = null, breathStart = 0, musicEnabled = false, musicStarting = false, sound = null;
+let magFilter = 'All', magSearch = '', breathTimer = null, breathStart = 0, sound = null;
 let saved = [];
 try { saved = JSON.parse(localStorage.getItem('invision-saved') || '[]'); if (!Array.isArray(saved)) saved = []; } catch { saved = []; }
 
@@ -32,7 +32,7 @@ function testimonialTicker() {
   return `<section class="testimonial-ticker" aria-label="Words from our community"><div class="testimonial-marquee"><div class="testimonial-group">${quotes}</div><div class="testimonial-group" aria-hidden="true">${quotes}</div></div><button class="ticker-toggle" data-action="ticker" aria-pressed="false">Pause testimonials <span aria-hidden="true">Ⅱ</span></button></section>`;
 }
 function breath() {
-  return `<section class="pause-section section wrap"><div><span class="eyebrow">A LITTLE SPACE FOR YOU</span><h2>Your next step?<br>Take a <em>breath.</em></h2><p>Before the next meeting. Before the next thing. Give yourself one quiet minute, right here.</p><p class="breath-note">Follow a gentle, comfortable rhythm. Breathe naturally whenever you prefer.</p></div><div class="breath-box"><div class="breath-orbit"><div class="breath-circle" id="breath-circle"><strong id="breath-label">Just be.</strong><span id="breath-count">YOUR ONE-MINUTE RESET</span></div></div><audio id="gentle-audio" src="assets/gentle-music.wav" preload="none" loop hidden></audio><div class="breath-actions"><button class="button light" data-action="breathe" id="breath-button">Start my minute <span aria-hidden="true">↗</span></button><button class="music-toggle" data-action="music" aria-pressed="${musicEnabled}"><span aria-hidden="true">♫</span> ${musicEnabled ? 'Pause gentle music' : 'Play gentle music'}</button></div><div class="breath-status" id="breath-status" role="status">A little pause can be a lovely place to start.</div></div></section>`;
+  return `<section class="pause-section section wrap"><div><span class="eyebrow">A LITTLE SPACE FOR YOU</span><h2>Your next step?<br>Take a <em>breath.</em></h2><p>Before the next meeting. Before the next thing. Give yourself one quiet minute, right here.</p><p class="breath-note">Follow a gentle, comfortable rhythm. Breathe naturally whenever you prefer.</p></div><div class="breath-box"><div class="breath-orbit"><div class="breath-circle" id="breath-circle"><strong id="breath-label">Just be.</strong><span id="breath-count">YOUR ONE-MINUTE RESET</span></div></div><audio id="gentle-audio" src="assets/gentle-music.wav" preload="metadata" loop hidden></audio><div class="breath-actions"><button class="button light" data-action="breathe" id="breath-button">Start my minute <span aria-hidden="true">↗</span></button><button class="music-toggle" data-action="music" aria-pressed="false"><span aria-hidden="true">♫</span> Play gentle music</button></div><div class="breath-status" id="breath-status" role="status">A little pause can be a lovely place to start.</div></div></section>`;
 }
 const dimensions = [
   ['Emotional','Making space to recognise feelings and seek support.'], ['Spiritual','Connecting with purpose, values and what gives life meaning.'],
@@ -119,19 +119,221 @@ function enhancePhotography(route) {
 }
 const workplaceClip = 'https://resource2.heygen.ai/videos/b64517ee75f040ee96156c38af57d404/b64517ee75f040ee96156c38af57d404/01a1a962-8551-7ab2-83e3-0530ba593a68.mp4';
 let activeScene = null;
-function stopScene() { if (!activeScene) return; const scene = activeScene; activeScene = null; scene.observer?.disconnect(); cancelAnimationFrame(scene.frame); if (scene.local) { scene.media.removeEventListener('change',scene.preferenceChange); return; } scene.video.pause(); scene.video.removeAttribute('src'); scene.video.load(); }
-function updateScenePlayback() { if (!activeScene) return; const scene = activeScene; if (scene.local) { scene.update(); return; } if (document.hidden || !scene.visible || scene.userPaused) { scene.video.pause(); return; } scene.play(); }
+function stopScene() {
+  if (!activeScene) return;
+  const scene = activeScene;
+  activeScene = null;
+  scene.observer?.disconnect();
+  cancelAnimationFrame(scene.frame);
+  if (scene.dispose) {
+    scene.dispose();
+    return;
+  }
+  scene.video.pause();
+  scene.video.removeAttribute('src');
+  scene.video.load();
+}
+
+function updateScenePlayback() {
+  if (!activeScene) return;
+  const scene = activeScene;
+  if (scene.update) {
+    scene.update();
+    return;
+  }
+  if (document.hidden || !scene.visible || scene.userPaused) {
+    scene.video.pause();
+    return;
+  }
+  scene.play();
+}
+
+// The hero artwork has a fixed 1536 × 1024 composition. Each region moves independently.
+function createHeroRenderer(canvas, image) {
+  const gl = canvas.getContext('webgl', {alpha:false, antialias:false, preserveDrawingBuffer:true});
+  if (!gl) return null;
+
+  function compile(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader,source);
+    gl.compileShader(shader);
+    return gl.getShaderParameter(shader,gl.COMPILE_STATUS) ? shader : null;
+  }
+
+  const vertex = compile(gl.VERTEX_SHADER,`
+    attribute vec2 position;
+    varying vec2 uv;
+    void main() {
+      uv = position * vec2(.5, -.5) + .5;
+      gl_Position = vec4(position, 0., 1.);
+    }
+  `);
+  const fragment = compile(gl.FRAGMENT_SHADER,`
+    precision highp float;
+    uniform sampler2D photo;
+    uniform float phase;
+    varying vec2 uv;
+
+    float influence(vec2 p, vec2 centre, vec2 radii) {
+      return 1. - smoothstep(.38, 1., length((p - centre) / radii));
+    }
+
+    void main() {
+      vec2 size = vec2(1536., 1024.);
+      vec2 p = uv * size;
+
+      // A small nod from the woman holding the water bottle.
+      float nod = sin(phase);
+      float left = influence(p, vec2(417., 161.), vec2(172., 200.));
+      vec2 offset = left * vec2(4., 12.) * nod;
+
+      // The woman in the centre shifts her shoulders as she laughs.
+      float shift = sin(phase + 2.1);
+      float middle = influence(p, vec2(815., 318.), vec2(198., 205.));
+      offset += middle * vec2(11., -11.) * shift;
+
+      // The woman holding the towel tilts her head about the neck.
+      float tilt = .085 * sin(phase + 3.8);
+      float right = influence(p, vec2(1263., 245.), vec2(188., 170.));
+      vec2 neck = p - vec2(1284., 355.);
+      offset += right * tilt * vec2(-neck.y, neck.x);
+
+      gl_FragColor = texture2D(photo, (p - offset) / size);
+    }
+  `);
+
+  const program = gl.createProgram();
+  if (!vertex || !fragment || !program) return null;
+  gl.attachShader(program,vertex);
+  gl.attachShader(program,fragment);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program,gl.LINK_STATUS)) return null;
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program,'position');
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+  if (gl.getError() !== gl.NO_ERROR) return null;
+
+  gl.viewport(0,0,canvas.width,canvas.height);
+  const phase = gl.getUniformLocation(program,'phase');
+  return {
+    draw(elapsed) {
+      gl.uniform1f(phase,(elapsed % 5400) * Math.PI * 2 / 5400);
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    },
+    dispose() {
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+      gl.deleteShader(vertex);
+      gl.deleteShader(fragment);
+    }
+  };
+}
+
 function enhanceHomeMotion() {
-  const image = $('#hero-scene'); if (!image) return;
-  const host = image.parentElement, control = document.createElement('button');
+  const image = $('#hero-scene');
+  if (!image) return;
+
+  const host = image.parentElement;
+  const control = document.createElement('button');
+  const canvas = document.createElement('canvas');
   const media = matchMedia('(prefers-reduced-motion: reduce)');
-  const scene = {local:true,media,image,host,control,visible:false,userPaused:media.matches || navigator.connection?.saveData === true,observer:null,frame:0};
-  host.classList.add('local-photo-motion', 'motion-scene'); control.type = 'button'; control.className = 'scene-toggle'; host.appendChild(control);
-  scene.update = () => { const playing = !document.hidden && scene.visible && !scene.userPaused; host.classList.toggle('photo-motion-playing',playing); control.textContent = playing ? 'Pause animation' : 'Play animation'; control.setAttribute('aria-pressed',String(playing)); };
-  scene.preferenceChange = () => { scene.userPaused = media.matches; scene.update(); }; media.addEventListener('change',scene.preferenceChange);
-  control.addEventListener('click',() => { scene.userPaused = !scene.userPaused; scene.update(); });
-  if ('IntersectionObserver' in window) { scene.observer = new IntersectionObserver(entries => {scene.visible = entries[0].isIntersecting;scene.update();},{threshold:.1});scene.observer.observe(host); } else { scene.visible = true; }
-  activeScene = scene; scene.update();
+  const scene = {
+    visible: !('IntersectionObserver' in window),
+    userPaused: media.matches || navigator.connection?.saveData === true,
+    frame: 0
+  };
+  let renderer, elapsed = 0, lastFrame = null, unavailable = false;
+  canvas.width = 960;
+  canvas.height = 640;
+  canvas.className = 'scene-motion';
+  canvas.setAttribute('aria-hidden','true');
+  control.type = 'button';
+  control.className = 'scene-toggle';
+  host.classList.add('motion-scene');
+  canvas.style.objectPosition = getComputedStyle(image).objectPosition;
+  image.after(canvas);
+  host.appendChild(control);
+
+  function showStill() {
+    unavailable = true;
+    cancelAnimationFrame(scene.frame);
+    host.classList.remove('scene-loaded');
+    control.hidden = true;
+  }
+
+  function draw(now) {
+    if (lastFrame !== null) elapsed += now - lastFrame;
+    lastFrame = now;
+    renderer.draw(elapsed);
+    scene.frame = requestAnimationFrame(draw);
+  }
+
+  scene.update = () => {
+    if (activeScene !== scene || unavailable) return;
+    const playing = scene.visible && !document.hidden && !scene.userPaused;
+    control.textContent = scene.userPaused ? 'Play animation' : 'Pause animation';
+    if (!playing) {
+      cancelAnimationFrame(scene.frame);
+      scene.frame = 0;
+      lastFrame = null;
+      if (media.matches) host.classList.remove('scene-loaded');
+      return;
+    }
+    if (!image.naturalWidth || scene.frame) return;
+    try {
+      renderer ??= createHeroRenderer(canvas,image);
+    } catch {
+      showStill();
+      return;
+    }
+    if (!renderer) {
+      showStill();
+      return;
+    }
+    renderer.draw(elapsed);
+    host.classList.add('scene-loaded');
+    scene.frame = requestAnimationFrame(draw);
+  };
+
+  const onPreferenceChange = () => {
+    scene.userPaused = media.matches || navigator.connection?.saveData === true;
+    scene.update();
+  };
+  scene.dispose = () => {
+    media.removeEventListener('change',onPreferenceChange);
+    renderer?.dispose();
+  };
+  activeScene = scene;
+  canvas.addEventListener('webglcontextlost',showStill);
+  image.addEventListener('load',scene.update,{once:true});
+  image.addEventListener('error',showStill,{once:true});
+  media.addEventListener('change',onPreferenceChange);
+  control.addEventListener('click',() => {
+    scene.userPaused = !scene.userPaused;
+    scene.update();
+  });
+  if ('IntersectionObserver' in window) {
+    scene.observer = new IntersectionObserver(([entry]) => {
+      scene.visible = entry.isIntersecting;
+      scene.update();
+    },{threshold:.1});
+    scene.observer.observe(host);
+  }
+  scene.update();
 }
 function enhanceMotion(route) {
   if (route === '/') { enhanceHomeMotion(); return; }
@@ -172,29 +374,137 @@ function openIssue(id) {
   const m = magazines.find(x => x.id === id); if (!m) return;
   showModal(`<span class="eyebrow">ARCHIVE · ISSUE ${m.id} · ${m.date}</span><div class="issue-reader"><aside class="issue-cover"><img src="${m.cover}" alt="${m.alt}"><div class="modal-tags">${m.tags.map(x => `<span class="pill">${x}</span>`).join('')}</div>${inquiry('Magazine — distribution','Ask about this issue')}</aside><div class="issue-article"><h2>${m.articleTitle}</h2><p class="archive-context">Original article pages from the ${m.date} issue. Cover and article previews only.</p><div class="reader-toolbar"><label for="article-zoom">Article zoom</label><select id="article-zoom"><option value="100">100%</option><option value="150">150%</option><option value="200">200%</option><option value="300">300%</option></select><span>Scroll to read each page.</span></div><div class="article-scroll" tabindex="0" aria-label="Original magazine article pages"><div class="article-sheets" id="article-sheets">${m.pages.map((p,i) => `<figure><img src="assets/articles/${p}" alt="${m.pageTitles[i]}, original magazine page" loading="eager"><figcaption>${m.pageTitles[i]} · <a href="assets/articles/${p}" target="_blank" rel="noopener">Open original page ↗</a></figcaption></figure>`).join('')}</div></div></div></div>`,true);
 }
-function updateMusicControl() { const control = $('.music-toggle'); if (!control) return; control.setAttribute('aria-pressed',String(musicEnabled && !musicStarting)); control.innerHTML = `<span aria-hidden="true">♫</span> ${musicStarting ? 'Starting music…' : musicEnabled ? 'Pause gentle music' : 'Play gentle music'}`; }
-async function startMusic() {
-  if (!musicEnabled || sound || musicStarting) return;
-  const audio = $('#gentle-audio'); if (!audio) { musicEnabled = false; return; }
-  sound = audio; musicStarting = true; audio.volume = .65; updateMusicControl();
-  try {
-    await audio.play();
-    if (sound !== audio || !musicEnabled || !audio.isConnected) { audio.pause(); return; }
-    musicStarting = false; updateMusicControl();
-    $('#breath-status').textContent = breathTimer ? 'Gentle music is playing with your breathing break.' : 'Gentle music is playing. Start your minute whenever you’re ready.';
-  } catch {
-    if (sound !== audio) return;
-    sound = null; musicEnabled = false; musicStarting = false; updateMusicControl();
-    if ($('#breath-status')) $('#breath-status').textContent = 'Music could not start. Please try Play gentle music again.';
-  }
+function updateMusicControl() {
+  const control = $('.music-toggle');
+  if (!control) return;
+  const playing = sound?.playing === true;
+  control.setAttribute('aria-pressed',String(playing));
+  control.innerHTML = `<span aria-hidden="true">♫</span> ${playing ? 'Pause gentle music' : sound ? 'Starting music…' : 'Play gentle music'}`;
 }
-function stopMusic() { const previous = sound; sound = null; musicEnabled = false; musicStarting = false; if (previous) { previous.pause(); previous.currentTime = 0; } updateMusicControl(); }
+
+function makeAmbientLoop(context) {
+  const chords = [[48,55,60,64,67],[45,52,57,60,64],[41,48,53,57,64],[43,50,55,59,62]];
+  const rate = 22050;
+  const step = 4 * rate;
+  const buffer = context.createBuffer(1,step * chords.length,rate);
+  const samples = buffer.getChannelData(0);
+
+  // Let each chord ring into the next, including across the loop boundary.
+  chords.forEach((notes,index) => {
+    notes.forEach((note, voice) => {
+      const frequency = 440 * 2 ** ((note - 69) / 12);
+      const pitch = 2 * Math.PI * frequency / rate;
+      const delay = Math.round(voice * .13 * rate);
+      const length = 5 * rate;
+      for (let i = 0; i < length; i++) {
+        const envelope = Math.sin(Math.PI * i / length) ** 2;
+        const sample = (index * step + delay + i) % samples.length;
+        samples[sample] += envelope * (.026 * Math.sin(pitch * i) + .004 * Math.sin(2 * pitch * i));
+      }
+    });
+  });
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  source.connect(context.destination);
+  return source;
+}
+
+function startMusic() {
+  const audio = $('#gentle-audio');
+  if (sound || !audio) return;
+  const request = {audio, events:new AbortController(), timer:null, context:null, source:null, playing:false, fallback:false};
+  sound = request;
+  updateMusicControl();
+
+  function markPlaying() {
+    if (sound !== request) return;
+    clearTimeout(request.timer);
+    request.timer = null;
+    request.playing = true;
+    updateMusicControl();
+    $('#breath-status').textContent = breathTimer ? 'Gentle music is playing with your breathing break.' : 'Gentle music is playing. Start your minute whenever you’re ready.';
+  }
+
+  function fail() {
+    if (sound !== request) return;
+    stopMusic();
+    $('#breath-status').textContent = 'Music could not start. Tap Play gentle music to try again.';
+  }
+
+  async function playFallback() {
+    if (sound !== request || request.fallback) return;
+    clearTimeout(request.timer);
+    request.fallback = true;
+    request.playing = false;
+    request.events.abort();
+    audio.pause();
+    updateMusicControl();
+
+    if (!request.context) {
+      fail();
+      return;
+    }
+    request.timer = setTimeout(fail,2500);
+    try {
+      await request.ready;
+      if (sound !== request) return;
+      if (request.context.state !== 'running') {
+        fail();
+        return;
+      }
+      request.source = makeAmbientLoop(request.context);
+      request.source.start();
+      markPlaying();
+    } catch {
+      fail();
+    }
+  }
+
+  // Unlock the fallback during the visitor’s click so it can play if the file stalls.
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      request.context = new AudioContext();
+      request.ready = request.context.resume().catch(() => {});
+    }
+  } catch {
+    // The original soundtrack can still play through the audio element.
+  }
+
+  const events = {signal:request.events.signal};
+  const watchForStall = () => {
+    if (request.timer === null) request.timer = setTimeout(playFallback,4000);
+  };
+  audio.addEventListener('playing',markPlaying,events);
+  audio.addEventListener('waiting',watchForStall,events);
+  audio.addEventListener('stalled',watchForStall,events);
+  audio.addEventListener('error',playFallback,events);
+  audio.volume = .65;
+  if (audio.error) audio.load();
+  watchForStall();
+  audio.play().catch(playFallback);
+}
+
+function stopMusic() {
+  const previous = sound;
+  sound = null;
+  if (previous) {
+    clearTimeout(previous.timer);
+    previous.events.abort();
+    previous.audio.pause();
+    previous.audio.currentTime = 0;
+    previous.source?.stop();
+    previous.context?.close().catch(() => {});
+  }
+  updateMusicControl();
+}
 function startBreath() {
   if (breathTimer) { stopBreath(); return; }
   breathStart = Date.now(); $('#breath-button').innerHTML = 'Finish my pause <span aria-hidden="true">×</span>'; $('#breath-status').textContent = 'Follow along, or choose your own comfortable rhythm.';
   let lastPhase = -1;
   const update = () => { const elapsed = (Date.now() - breathStart) / 1000; if (elapsed >= 60) { stopBreath(false); $('#breath-label').textContent = 'Lovely.'; $('#breath-count').textContent = 'ONE MINUTE, JUST FOR YOU'; $('#breath-status').textContent = 'Take that little moment of space into your day.'; return; } const phase = Math.floor(elapsed / 5) % 2; if (phase !== lastPhase) { lastPhase = phase; $('#breath-circle').classList.toggle('expand',phase === 0); $('#breath-label').textContent = phase === 0 ? 'Breathe in.' : 'Breathe out.'; } $('#breath-count').textContent = `${60 - Math.floor(elapsed)} SECONDS OF SPACE`; };
-  update(); breathTimer = setInterval(update,200); startMusic();
+  update(); breathTimer = setInterval(update,200);
 }
 function stopBreath(update = true) { if (breathTimer) clearInterval(breathTimer); breathTimer = null; stopMusic(); $('#breath-circle')?.classList.remove('expand'); if ($('#breath-button')) $('#breath-button').innerHTML = 'Start my minute <span aria-hidden="true">↗</span>'; if (update && $('#breath-label')) { $('#breath-label').textContent = 'Just be.'; $('#breath-count').textContent = 'YOUR ONE-MINUTE RESET'; $('#breath-status').textContent = 'Whenever you’re ready, start again.'; } }
 
@@ -209,7 +519,14 @@ document.addEventListener('click',e => {
   if (target?.dataset.dimension !== undefined) { const index = Number(target.dataset.dimension); document.querySelectorAll('[data-dimension]').forEach(b => { b.classList.toggle('active',b === target); b.setAttribute('aria-pressed',String(b === target)); }); $('#dimension-detail').innerHTML = `<strong>${dimensions[index][0]} wellness.</strong> ${dimensions[index][1]}`; }
   if (target?.dataset.action === 'pause') { $('.pause-section').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',block:'center'}); $('#breath-button').focus({preventScroll:true}); }
   if (target?.dataset.action === 'breathe') startBreath();
-  if (target?.dataset.action === 'music') { if (musicEnabled || musicStarting) { stopMusic(); $('#breath-status').textContent = breathTimer ? 'Your breathing break continues without music.' : 'Music paused. Start again whenever you’re ready.'; } else { musicEnabled = true; startMusic(); } }
+  if (target?.dataset.action === 'music') {
+    if (sound) {
+      stopMusic();
+      $('#breath-status').textContent = breathTimer ? 'Your breathing break continues without music.' : 'Music paused. Start again whenever you’re ready.';
+    } else {
+      startMusic();
+    }
+  }
   if (target?.dataset.action === 'ticker') { const paused = $('.testimonial-ticker').classList.toggle('paused'); target.setAttribute('aria-pressed',String(paused)); target.innerHTML = paused ? 'Play testimonials <span aria-hidden="true">▶</span>' : 'Pause testimonials <span aria-hidden="true">Ⅱ</span>'; }
   if (target?.dataset.action === 'portal') showModal(`<span class="eyebrow">QUICK CARE CLINIC</span><h2>Patient portal<br>is being prepared.</h2><p>Secure sign-in, intake forms and test-result access are not active yet.</p><p>Please do not send test results or medical records through the website’s general enquiry form.</p>${button('Contact the team','#/contact')}`);
   if (target?.dataset.action === 'privacy') showModal('<span class="eyebrow">YOUR DETAILS, WITH CARE</span><h2>Privacy & enquiries.</h2><p>The enquiry form prepares an email on your device. Nothing is sent until you review and send it through your email app. This site does not store enquiry form responses.</p><p>Saved magazine issues are stored only in this browser. Use the heart buttons to remove them, or clear your browser’s site data.</p><p>We do not collect patient information or display medical records on this website. For questions about your details, contact wellnessinvision@gmail.com.</p><p>Typography may be loaded from Google Fonts. If it is unavailable, your device’s fonts are used.</p>');
