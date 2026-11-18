@@ -1,0 +1,55 @@
+/* Round two: distinct services, supplied branding and accessible local motion. */
+.brand-star{display:block;width:1em;height:1em;color:var(--gold);overflow:visible}
+.photo-star .brand-star{width:68px;height:68px}
+.testimonial-group>b{display:flex;align-items:center;flex:0 0 auto}
+.testimonial-group>b .brand-star{width:34px;height:34px}
+.city-icon .brand-star{width:64px;height:64px}
+.city-page-art>span .brand-star{width:110px;height:110px}
+.service-shortcuts{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.service-shortcuts a{min-width:0;font-size:8px;overflow-wrap:break-word}
+.service-shortcuts .shortcut-bloom{object-fit:contain;background:white}
+.hero .hero-copy h1{margin-top:0}
+.local-photo-motion>img{animation:wellness-photo-drift 12s ease-in-out infinite alternate;animation-play-state:paused;transform-origin:50% 50%}
+.local-photo-motion.photo-motion-playing>img{animation-play-state:running}
+@keyframes wellness-photo-drift{from{transform:scale(1.01) translateY(0)}to{transform:scale(1.04) translateY(-.5%)}}
+.bloom-art .bloom-photo-logo,.bloom-hero .bloom-course-photo .bloom-photo-logo{background:#fff;border-radius:12px;padding:8px;width:190px;max-width:45%;height:auto;object-fit:contain}
+.bloom-support-photo{margin:30px 0 0;border-radius:18px;overflow:hidden;background:#f5ede5}
+.bloom-support-photo img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.bloom-details{align-items:start}
+.bloom-course-link{margin-top:55px}
+.founders-top{padding-top:25px}
+.founder-card .founder-photo,.founder-card:nth-child(2) .founder-photo{height:500px;width:100%;object-fit:contain;object-position:center;background:#ecebed}
+.founder-card:first-child .founder-photo{background:#d7d8da}
+.founder-card:nth-child(2) .founder-photo{background:#ece8ed}
+.founder-grid{align-items:stretch}
+.learning-intro{display:grid;grid-template-columns:1fr 1.25fr;gap:65px;align-items:start}
+.learning-intro h2{font-size:clamp(32px,3.5vw,49px)}
+.learning-intro p+p,.clinic-intro p+p,.clinic-partnership p+p{margin-top:18px}
+.learning-platform{margin:45px 0}
+.learning-platform .button{flex-shrink:0}
+.course-topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.course-topic{position:relative;display:flex;flex-direction:column;padding:32px;background:var(--lav);border:1px solid var(--line);border-radius:18px}
+.course-topic h2{font-size:29px;line-height:1.2;margin-bottom:16px}
+.course-topic p{font-size:15px;margin-bottom:28px}
+.course-topic .button{align-self:flex-start;margin-top:auto;gap:16px}
+.clinic-intro{display:grid;grid-template-columns:1.1fr 1fr;gap:45px;align-items:start}
+.clinic-intro h2{font-size:clamp(32px,3.5vw,46px);margin:15px 0 22px}
+.clinic-photo{margin:0}
+.clinic-photo img{display:block;width:100%;height:auto;border-radius:20px}
+.clinic-photo figcaption{font-size:11px;color:var(--muted);margin-top:12px}
+.clinic-intro .button{margin-top:25px}
+.clinic-services{background:var(--lav);border-radius:20px;padding:42px;margin:55px 0}
+.clinic-services h2{font-size:43px;margin:15px 0 22px}
+.clinic-services ul{display:grid;grid-template-columns:1fr 1fr;gap:15px 38px;padding-left:22px;margin:28px 0}
+.clinic-services li{padding-left:6px}
+.clinic-services li::marker{color:var(--gold)}
+.clinic-scope{border-top:1px solid var(--line);padding-top:24px;font-size:14px}
+.clinic-partnership{gap:60px;margin:55px 0}
+.clinic-close{align-items:flex-start}
+.clinic-close h2{font-size:34px}
+.clinic-close p{max-width:700px;margin-top:15px}
+.clinic-close .button{flex-shrink:0}
+.drop-menu{max-height:calc(100dvh - 125px);overflow-y:auto}
+@media(max-width:1150px) and (min-width:851px){header{gap:18px}.brand img{width:225px}nav{gap:15px}nav>a{font-size:11px}.service-shortcuts a{font-size:7px}}
+@media(max-width:850px){nav.open{max-height:calc(100dvh - 83px);overflow-y:auto}.drop-menu{max-height:none;overflow:visible}.learning-intro,.clinic-intro{grid-template-columns:1fr;gap:28px}.clinic-photo{max-width:720px}.learning-platform{align-items:flex-start}.clinic-partnership{gap:25px}.founder-card .founder-photo,.founder-card:nth-child(2) .founder-photo{height:430px}.service-shortcuts a{font-size:9px}.clinic-close h2{font-size:30px}}
+@media(max-width:560px){.photo-star .brand-star{width:47px;height:47px}.city-icon .brand-star{width:44px;height:44px}.city-page-art>span .brand-star{width:55px;height:55px}.service-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr));bottom:78px;gap:5px}.service-shortcuts a{font-size:9px;padding:3px}.service-shortcuts a img{height:30px}.photo-hero{height:590px}.hero-photo-frame{bottom:245px}.photo-hero .floating-note{bottom:0}.photo-bottom{font-size:7px}.bloom-art .bloom-photo-logo,.bloom-hero .bloom-course-photo .bloom-photo-logo{width:145px;max-width:43%;padding:5px}.founder-card .founder-photo,.founder-card:nth-child(2) .founder-photo{height:auto;max-height:500px;object-fit:contain}.founder-copy{padding:24px}.course-topic-grid{grid-template-columns:1fr;gap:18px}.course-topic{padding:26px}.course-topic h2{font-size:26px}.course-topic .button{font-size:12px;padding:14px 17px}.learning-intro h2{font-size:36px}.learning-platform{padding:26px}.clinic-services{padding:28px 24px;margin:35px 0}.clinic-services h2{font-size:35px}.clinic-services ul{grid-template-columns:1fr;gap:15px}.clinic-intro{gap:25px}.clinic-partnership{margin:35px 0}.clinic-close{padding:26px}.clinic-close h2{font-size:29px}}
