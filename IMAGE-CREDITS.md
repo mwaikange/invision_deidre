@@ -4,7 +4,7 @@ Created with the built-in image generation tool. Project assets: dist/assets/mov
 
 The active header and footer use `dist/assets/invision-logo.jpeg`, extracted unchanged from the supplied first-round Word document. It includes the photographic eye within the InVision wordmark. The earlier supplied eye photograph remains in `dist/assets/eye-original.jpeg` and is used as the favicon.
 
-The founders’ portraits were supplied for this website: Hileni Phillips (`hileni-phillips.jpg`) came from the separately attached photograph; Dr Deidre Kwenani (`deidre-kwenani.jpeg`) came from the Word document. Both files retain the original image bytes.
+The founders’ portraits were supplied for this website: Hileni Ngishishange (`hileni-phillips.jpg`) came from the separately attached photograph; Dr Deidre Kwenani (`deidre-kwenani.jpeg`) came from the Word document. Both files retain the original image bytes.
 
 The original VA(u)LT artwork is preserved in `vault-original.jpeg`. `vault-phone.svg` embeds that artwork with a phone detail added inside the U, as requested. `wellness-dimensions.svg` is an original diagram of the eight dimensions of wellness.
 
