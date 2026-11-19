@@ -53,3 +53,15 @@
 @media(max-width:1150px) and (min-width:851px){header{gap:18px}.brand img{width:225px}nav{gap:15px}nav>a{font-size:11px}.service-shortcuts a{font-size:7px}}
 @media(max-width:850px){nav.open{max-height:calc(100dvh - 83px);overflow-y:auto}.drop-menu{max-height:none;overflow:visible}.learning-intro,.clinic-intro{grid-template-columns:1fr;gap:28px}.clinic-photo{max-width:720px}.learning-platform{align-items:flex-start}.clinic-partnership{gap:25px}.founder-card .founder-photo,.founder-card:nth-child(2) .founder-photo{height:430px}.service-shortcuts a{font-size:9px}.clinic-close h2{font-size:30px}}
 @media(max-width:560px){.photo-star .brand-star{width:47px;height:47px}.city-icon .brand-star{width:44px;height:44px}.city-page-art>span .brand-star{width:55px;height:55px}.service-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr));bottom:78px;gap:5px}.service-shortcuts a{font-size:9px;padding:3px}.service-shortcuts a img{height:30px}.photo-hero{height:590px}.hero-photo-frame{bottom:245px}.photo-hero .floating-note{bottom:0}.photo-bottom{font-size:7px}.bloom-art .bloom-photo-logo,.bloom-hero .bloom-course-photo .bloom-photo-logo{width:145px;max-width:43%;padding:5px}.founder-card .founder-photo,.founder-card:nth-child(2) .founder-photo{height:auto;max-height:500px;object-fit:contain}.founder-copy{padding:24px}.course-topic-grid{grid-template-columns:1fr;gap:18px}.course-topic{padding:26px}.course-topic h2{font-size:26px}.course-topic .button{font-size:12px;padding:14px 17px}.learning-intro h2{font-size:36px}.learning-platform{padding:26px}.clinic-services{padding:28px 24px;margin:35px 0}.clinic-services h2{font-size:35px}.clinic-services ul{grid-template-columns:1fr;gap:15px}.clinic-intro{gap:25px}.clinic-partnership{margin:35px 0}.clinic-close{padding:26px}.clinic-close h2{font-size:29px}}
+
+@media (min-width: 851px) {
+  .world-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .world-grid > .world-card {
+    grid-column: span 2;
+  }
+  .world-grid > .world-card:nth-child(4):nth-last-child(2) {
+    grid-column: 2 / span 2;
+  }
+}
